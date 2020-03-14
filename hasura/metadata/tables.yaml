@@ -1,0 +1,243 @@
+- table:
+    schema: public
+    name: article
+  object_relationships:
+  - name: author
+    using:
+      foreign_key_constraint_on: author_id
+  array_relationships:
+  - name: comments
+    using:
+      foreign_key_constraint_on:
+        column: article_id
+        table:
+          schema: public
+          name: comment
+  insert_permissions:
+  - role: moderator
+    permission:
+      check:
+        author_id:
+          _eq: X-Hasura-User-Id
+      set:
+        author_id: x-hasura-User-Id
+        created_at: now()
+      columns:
+      - content
+      - id
+      - title
+  - role: user
+    permission:
+      check:
+        author_id:
+          _eq: X-Hasura-User-Id
+      set:
+        author_id: x-hasura-User-Id
+        created_at: now()
+      columns:
+      - content
+      - id
+      - title
+  select_permissions:
+  - role: moderator
+    permission:
+      columns:
+      - author_id
+      - content
+      - created_at
+      - id
+      - title
+      filter: {}
+  - role: user
+    permission:
+      columns:
+      - author_id
+      - content
+      - created_at
+      - id
+      - title
+      filter: {}
+  update_permissions:
+  - role: moderator
+    permission:
+      columns:
+      - content
+      - title
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+      check: null
+  - role: user
+    permission:
+      columns:
+      - content
+      - title
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+      check: null
+  delete_permissions:
+  - role: moderator
+    permission:
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      filter:
+        author_id:
+          _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: comment
+  object_relationships:
+  - name: commenter
+    using:
+      foreign_key_constraint_on: commenter_id
+  array_relationships:
+  - name: comment_spams
+    using:
+      foreign_key_constraint_on:
+        column: comment_id
+        table:
+          schema: public
+          name: comment_spam
+  computed_fields:
+  - name: spam_count
+    definition:
+      function:
+        schema: public
+        name: get_spam_count
+      table_argument: null
+    comment: the number of spam reports on a comment
+  insert_permissions:
+  - role: moderator
+    permission:
+      check:
+        commenter_id:
+          _eq: X-Hasura-User-Id
+      set:
+        commenter_id: x-hasura-User-Id
+      columns:
+      - article_id
+      - text
+  - role: user
+    permission:
+      check:
+        commenter_id:
+          _eq: X-Hasura-User-Id
+      set:
+        commenter_id: x-hasura-User-Id
+      columns:
+      - article_id
+      - text
+  select_permissions:
+  - role: moderator
+    permission:
+      columns:
+      - article_id
+      - id
+      - commenter_id
+      - text
+      - created_at
+      computed_fields:
+      - spam_count
+      filter: {}
+  - role: user
+    permission:
+      columns:
+      - article_id
+      - id
+      - commenter_id
+      - text
+      - created_at
+      filter: {}
+  update_permissions:
+  - role: user
+    permission:
+      columns:
+      - text
+      filter:
+        commenter_id:
+          _eq: X-Hasura-User-Id
+      check: null
+  delete_permissions:
+  - role: moderator
+    permission:
+      filter: {}
+  - role: user
+    permission:
+      filter:
+        commenter_id:
+          _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: comment_spam
+  select_permissions:
+  - role: moderator
+    permission:
+      columns:
+      - comment_id
+      - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      columns:
+      - comment_id
+      - user_id
+      filter:
+        user_id:
+          _eq: X-Hasura-User-Id
+- table:
+    schema: public
+    name: user
+  array_relationships:
+  - name: articles
+    using:
+      foreign_key_constraint_on:
+        column: author_id
+        table:
+          schema: public
+          name: article
+  insert_permissions:
+  - role: moderator
+    permission:
+      check:
+        id:
+          _eq: X-Hasura-User-Id
+      set:
+        id: x-hasura-User-Id
+      columns:
+      - age
+      - avatar
+      - username
+  - role: user
+    permission:
+      check:
+        id:
+          _eq: X-Hasura-User-Id
+      set:
+        id: x-hasura-User-Id
+      columns:
+      - age
+      - avatar
+      - username
+  select_permissions:
+  - role: moderator
+    permission:
+      columns:
+      - age
+      - avatar
+      - id
+      - username
+      filter: {}
+  - role: user
+    permission:
+      columns:
+      - age
+      - avatar
+      - id
+      - username
+      filter: {}
